@@ -1,0 +1,72 @@
+if (!requireNamespace("pheatmap", quietly = TRUE)) install.packages("pheatmap")
+if (!requireNamespace("viridis", quietly = TRUE)) install.packages("viridis")
+library(pheatmap)
+library(viridis)
+
+# Convert geneExp to a numeric matrix if it's not already
+geneExp_matrix <- as.matrix(geneExp)
+
+
+ensembl_ids_to_keep <- c("ENSG00000075624.17", "ENSG00000090339.9", "ENSG00000100197.22", 
+                         "ENSG00000100320.23", "ENSG00000103024.7", "ENSG00000109971.14", 
+                         "ENSG00000110651.12", "ENSG00000111640.15", "ENSG00000120217.14", 
+                         "ENSG00000130234.12", "ENSG00000132589.16", "ENSG00000134460.18", 
+                         "ENSG00000135318.12", "ENSG00000135404.12", "ENSG00000137166.16", 
+                         "ENSG00000137845.15", "ENSG00000139350.12", "ENSG00000146648.19", 
+                         "ENSG00000150093.20", "ENSG00000159640.17", "ENSG00000164111.15", 
+                         "ENSG00000165029.17", "ENSG00000167552.14", "ENSG00000169174.11", 
+                         "ENSG00000171680.23")
+
+heatMapMatrix <- geneExp[rownames(geneExp) %in% ensembl_ids_to_keep, ]
+
+
+pheatmap(heatMapMatrix, 
+         scale = "row",
+         clustering_distance_rows = "correlation", 
+         clustering_distance_cols = "euclidean", 
+         clustering_method = "ward.D2",
+         color = heat_colors,
+         fontsize = 10,
+         fontsize_row = 6,
+         fontsize_col = 8,
+         show_rownames = FALSE,
+         show_colnames = TRUE,
+         border_color = NA,
+         treeheight_row = 20,
+         treeheight_col = 30,
+         legend = TRUE,
+         main = "Gene Expression Heatmap"
+)
+
+
+
+heat_colors <- colorRampPalette(c("blue", "white", "red"))(50)
+
+# Compute row-wise correlation distance
+row_cor <- cor(t(heatMapMatrix), method = "pearson")  # Transpose matrix for gene-wise correlation
+row_dist <- as.dist(1 - row_cor)  # Convert correlation to distance
+
+# Perform hierarchical clustering
+row_cluster <- hclust(row_dist, method = "ward.D2")
+
+# Set up plotting area: 1 row, 2 columns
+par(mfrow=c(1,2))
+
+plot(row_cluster, labels = FALSE, main = "Gene Clustering Dendrogram", sub = "", xlab = "")
+
+# Plot only the heatmap without the dendrogram
+heatmap.2(as.matrix(heatMapMatrix), 
+          col = heat_colors, 
+          scale = "row",
+          trace = "none",
+          density.info = "none",
+          key = TRUE,
+          margins = c(12, 15),  # Adjust margins for better spacing
+          Colv = FALSE,  # Remove column dendrogram
+          Rowv = FALSE,  # Remove row dendrogram
+          dendrogram = "none",  # Ensure no dendrogram
+          cexRow = 1.0,  # Increase row label size
+          cexCol = 1.2,  # Increase column label size
+          main = "Gene Expression Heatmap",
+          xlab = "Samples", 
+          ylab = "Genes")
